@@ -1,15 +1,17 @@
-package dt
+package ste
 
 import (
     "fmt"
     "os"
     "io"
+    "bufio"
 )
 
 type Editor struct {
     term TermConfig
     buf Buffer
     cursorPos cursorPos
+    reader *bufio.Reader
 }
 
 type cursorPos struct {
@@ -21,6 +23,7 @@ func (e *Editor) Init() {
     e.term = TermConfig{}
     e.buf = Buffer{}
     e.cursorPos = cursorPos{x: 0, y: 0}
+    e.reader = bufio.NewReader(os.Stdin)
 }
 
 func (e *Editor) Start() {
@@ -42,23 +45,23 @@ func (e *Editor) Start() {
 }
 
 func (e *Editor) process() bool {
-    keyAscii := e.readKeyPress()
+    keyAscii, key := e.readKeyPress()
     switch keyAscii {
-    case 'q':
+    case 17:
         return true
     case '\r':
         fmt.Print("\r\n")
         e.cursorPos.x = 0
         e.cursorPos.y ++
     default:
-        fmt.Println(keyAscii)
+        fmt.Print(key)
         e.cursorPos.x ++
     }
     return false
 }
 
-func (e *Editor) readKeyPress() int {
-    var buf []byte
-    _, _ = os.Stdin.Read(buf[:])
-    return int(buf[0])
+func (e *Editor) readKeyPress() (int, string){
+    var buf [1]byte
+    _, _ = e.reader.Read(buf[:])
+    return int(buf[0]), string(buf[0])
 }

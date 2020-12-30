@@ -1,4 +1,4 @@
-package dt
+package ste
 
 type Buffer struct {
     rows []dataRow

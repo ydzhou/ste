@@ -1,7 +1,7 @@
 package main
 
 import (
-    "github.com/ydzhou/ste"
+    "github.com/ydzhou/ste/internal"
 )
 
 func main() {
