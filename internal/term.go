@@ -2,25 +2,67 @@ package ste
 
 import (
     "os"
-    "github.com/google/goterm/term"
+    "syscall"
+    "unsafe"
+    "errors"
 )
 
 type TermConfig struct {
-    config term.Termios
+    term syscall.Termios
+    prevTerm syscall.Termios
 }
 
 func (t *TermConfig) Raw() (error)  {
     var err error
-    t.config, err = term.Attr(os.Stdin)
+    t.term, err = t.getAttr(os.Stdin.Fd())
     if err != nil {
         return err
     }
-    config := t.config
-    config.Raw()
-    config.Set(os.Stdin)
+    
+    t.prevTerm = t.term
+    t.setRaw(&t.term)
+
     return nil
 }
 
 func (t *TermConfig) Reset() {
-    t.config.Set(os.Stdin)
+    _ = t.setAtt(os.Stdin.Fd(), &t.prevTerm)
+}
+
+func (t *TermConfig) setRaw(term *syscall.Termios) {
+    // This attempts to replicate the behaviour documented for cfmakeraw in
+    // the termios(3) manpage.
+    term.Iflag &^= syscall.IGNBRK | syscall.BRKINT | syscall.PARMRK | syscall.ISTRIP | syscall.INLCR | syscall.IGNCR | syscall.ICRNL | syscall.IXON
+    // newState.Oflag &^= syscall.OPOST
+    term.Lflag &^= syscall.ECHO | syscall.ECHONL | syscall.ICANON | syscall.ISIG | syscall.IEXTEN
+    term.Cflag &^= syscall.CSIZE | syscall.PARENB
+    term.Cflag |= syscall.CS8
+
+    term.Cc[syscall.VMIN] = 1
+    term.Cc[syscall.VTIME] = 0
+}
+func (t *TermConfig) getAttr(fd uintptr) (syscall.Termios, error) {
+    var term syscall.Termios
+    _, _, err := syscall.Syscall6(
+        syscall.SYS_IOCTL,
+        fd,
+        TIOGETATT,
+        uintptr(unsafe.Pointer(&term)),
+        0,0,0)
+    if err != 0 {
+        return nil, errors.New("failed to get term attributes")
+    }
+    return term, nil
+}
+
+func (t *TermConfig) setAtt(fd uintptr, term *syscall.Termios) (error) {
+    _, _, err := syscall.Syscall6(
+        syscall.SYS_IOCTL,
+        fd,
+        TIOSETATT,
+        uintptr(unsafe.Pointer(term)),
+        0,0,0)
+    if err != 0 {
+        return errors.New("faled to set term attributes")
+    }
 }
