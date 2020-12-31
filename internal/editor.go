@@ -42,40 +42,48 @@ func (e *Editor) Start() {
 }
 
 func (e *Editor) process() bool {
-    keyAscii, key := e.readKeyPress()
+    keyAscii, key, special := e.readKeyPress()
+    if special {
     switch keyAscii {
     case CTRL_Q:
         return true
     case ARROW_UP, ARROW_DOWN, ARROW_RIGHT, ARROW_LEFT:
         e.moveCursor(keyAscii)
         break
-    case '\r':
+    case ENTER:
         e.buf.NewLine(e.cursorX)
         e.cursorX ++
+        e.cursorY = 0
         break
-    default:
+    }
+    } else {
         e.buf.Insert(e.cursorX, e.cursorY, key)
         e.cursorY ++
     }
     return false
 }
 
-func (e *Editor) readKeyPress() (int, rune){
-    r, _, _ := e.reader.ReadRune()
-    if r == 27 {
-        r, _, _ = e.reader.ReadRune()
-        r, _, _ = e.reader.ReadRune()
+func (e *Editor) readKeyPress() (int, rune, bool){
+    special := false
+    var b [3]byte
+    _, _ = e.reader.Read(b[:])
+    r := rune(b[0])
+    switch int(b[0]) {
+    case 17: 
+        return CTRL_Q, r, true
+    case 13:
+        return ENTER, r, true
     }
-    switch int(r) {
-        case 17: return CTRL_Q, r 
+    if int(b[0]) == 27 {
+        special = true
+        switch int(b[2]) {
+        case 65: return ARROW_UP, r, special
+        case 66: return ARROW_DOWN, r, special
+        case 67: return ARROW_RIGHT, r, special
+        case 68: return ARROW_LEFT, r, special
+        } 
     }
-    switch int(r) {
-        case 65: return ARROW_UP, r
-        case 66: return ARROW_DOWN, r
-        case 67: return ARROW_RIGHT, r
-        case 68: return ARROW_LEFT, r
-    } 
-    return -1, r
+    return -1, r, false
 }
 
 func (e *Editor) moveCursor(keyType int) {
@@ -85,13 +93,13 @@ func (e *Editor) moveCursor(keyType int) {
             e.cursorX --
         }
     case ARROW_DOWN:
-        // if e.cursorX < len(e.buf.lines) - 1 {
+        if e.cursorX < len(e.buf.lines) - 1 {
             e.cursorX ++
-        // }
+        }
     case ARROW_RIGHT:
-        // if len(e.buf.lines) > 0 && e.cursorY < len(e.buf.lines[e.cursorX].txt) - 1 {
+        if len(e.buf.lines) > 0 && e.cursorY < len(e.buf.lines[e.cursorX].txt) - 1 {
             e.cursorY ++
-        // }
+        }
     case ARROW_LEFT:
         if e.cursorY > 0 {
             e.cursorY -- 

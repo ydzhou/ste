@@ -51,6 +51,7 @@ func (r *Render) drawBuffer(
             continue
         }
         res += string(row.txt[colOffset:])
+        res += "\n"
     }
     return res
 }

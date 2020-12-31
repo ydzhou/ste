@@ -7,4 +7,6 @@ const (
     ARROW_DOWN = iota
     ARROW_RIGHT = iota
     ARROW_LEFT = iota
+
+    ENTER = iota
 )

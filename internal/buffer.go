@@ -12,7 +12,7 @@ type line struct {
 
 func (b *Buffer) NewLine(x int) {
     b.lines = append(b.lines, line{})
-    if x == len(b.lines) - 1 {
+    if x == len(b.lines) - 2 {
         return
     }
     copy(b.lines[x+1:], b.lines[x:])
