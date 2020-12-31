@@ -8,25 +8,24 @@ import (
 )
 
 type TermConfig struct {
-    term syscall.Termios
-    prevTerm syscall.Termios
+    prevTerm *syscall.Termios
 }
 
 func (t *TermConfig) Raw() (error)  {
-    var err error
-    t.term, err = t.getAttr(os.Stdin.Fd())
+    term, err := t.getAttr(os.Stdin.Fd())
     if err != nil {
         return err
     }
     
-    t.prevTerm = t.term
-    t.setRaw(&t.term)
+    t.prevTerm = term
+    t.setRaw(term)
+    t.setAtt(os.Stdin.Fd(), term)
 
     return nil
 }
 
 func (t *TermConfig) Reset() {
-    _ = t.setAtt(os.Stdin.Fd(), &t.prevTerm)
+    _ = t.setAtt(os.Stdin.Fd(), t.prevTerm)
 }
 
 func (t *TermConfig) setRaw(term *syscall.Termios) {
@@ -41,7 +40,7 @@ func (t *TermConfig) setRaw(term *syscall.Termios) {
     term.Cc[syscall.VMIN] = 1
     term.Cc[syscall.VTIME] = 0
 }
-func (t *TermConfig) getAttr(fd uintptr) (syscall.Termios, error) {
+func (t *TermConfig) getAttr(fd uintptr) (*syscall.Termios, error) {
     var term syscall.Termios
     _, _, err := syscall.Syscall6(
         syscall.SYS_IOCTL,
@@ -52,7 +51,7 @@ func (t *TermConfig) getAttr(fd uintptr) (syscall.Termios, error) {
     if err != 0 {
         return nil, errors.New("failed to get term attributes")
     }
-    return term, nil
+    return &term, nil
 }
 
 func (t *TermConfig) setAtt(fd uintptr, term *syscall.Termios) (error) {
@@ -65,4 +64,5 @@ func (t *TermConfig) setAtt(fd uintptr, term *syscall.Termios) (error) {
     if err != 0 {
         return errors.New("faled to set term attributes")
     }
+    return nil
 }

@@ -1,26 +1,29 @@
 package ste
 
 type Buffer struct {
-    rows []dataRow
+    lines []line
     dirty bool
     id int
 }
 
-type dataRow struct {
-    rowIdex int
-    data []byte
-    size int
+type line struct {
+    txt [] rune
 }
 
-func (b *Buffer) NewRow() {
-    b.rows = append(b.rows, dataRow{})
-}
-
-func (b *Buffer) Insert(x, y int, data []byte) {
-    row := b.rows[x].data
-    row = row[:len(data)]
-    copy(row[(x + len(data)):], row[x:])
-    for i := 0; i < len(data); i++ {
-        row[x + i] = data[i]
+func (b *Buffer) NewLine(x int) {
+    b.lines = append(b.lines, line{})
+    if x == len(b.lines) - 1 {
+        return
     }
+    copy(b.lines[x+1:], b.lines[x:])
+    b.lines[x] = line{}
+}
+
+func (b *Buffer) Insert(x, y int, data rune) {
+    b.lines[x].txt = append(b.lines[x].txt, data)
+    if y == len(b.lines[x].txt) - 1 {
+        return
+    } 
+    copy(b.lines[x].txt[y+1:], b.lines[x].txt[y:])
+    b.lines[x].txt[y] = data
 }

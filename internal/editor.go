@@ -1,67 +1,100 @@
 package ste
 
 import (
-    "fmt"
     "os"
-    "io"
     "bufio"
 )
 
 type Editor struct {
     term TermConfig
     buf Buffer
-    cursorPos cursorPos
     reader *bufio.Reader
-}
-
-type cursorPos struct {
-    x int
-    y int
+    render Render
+    cursorX, cursorY int
+    rowOffset, colOffset int
 }
 
 func (e *Editor) Init() {
     e.term = TermConfig{}
     e.buf = Buffer{}
-    e.cursorPos = cursorPos{x: 0, y: 0}
     e.reader = bufio.NewReader(os.Stdin)
+    e.render = Render{}
+    e.cursorX = 0
+    e.cursorY = 0
+    e.buf.NewLine(0)
 }
 
 func (e *Editor) Start() {
     _ = e.term.Raw()
 
-    io.WriteString(os.Stdout, "\x1b[2J")
-    io.WriteString(os.Stdout, "\x1b[H")
+    e.render.Clear()
 
     defer e.term.Reset()
 
     for {
+        e.render.DrawScreen(e.buf, e.cursorX, e.cursorY, e.rowOffset, e.colOffset)
         if e.process() {
             break
         }
     }
 
-    io.WriteString(os.Stdout, "\x1b[2J")
-    io.WriteString(os.Stdout, "\x1b[H")
+    e.render.Clear()
 }
 
 func (e *Editor) process() bool {
     keyAscii, key := e.readKeyPress()
     switch keyAscii {
-    case 17:
+    case CTRL_Q:
         return true
+    case ARROW_UP, ARROW_DOWN, ARROW_RIGHT, ARROW_LEFT:
+        e.moveCursor(keyAscii)
+        break
     case '\r':
-        fmt.Print("\r\n")
-        e.cursorPos.x = 0
-        e.cursorPos.y ++
+        e.buf.NewLine(e.cursorX)
+        e.cursorX ++
+        break
     default:
-        fmt.Print(key)
-        e.cursorPos.x ++
+        e.buf.Insert(e.cursorX, e.cursorY, key)
+        e.cursorY ++
     }
     return false
 }
 
-func (e *Editor) readKeyPress() (int, string){
-    var buf [1]byte
-    _, _ = e.reader.Read(buf[:])
-    return int(buf[0]), string(buf[0])
+func (e *Editor) readKeyPress() (int, rune){
+    r, _, _ := e.reader.ReadRune()
+    if r == 27 {
+        r, _, _ = e.reader.ReadRune()
+        r, _, _ = e.reader.ReadRune()
+    }
+    switch int(r) {
+        case 17: return CTRL_Q, r 
+    }
+    switch int(r) {
+        case 65: return ARROW_UP, r
+        case 66: return ARROW_DOWN, r
+        case 67: return ARROW_RIGHT, r
+        case 68: return ARROW_LEFT, r
+    } 
+    return -1, r
+}
+
+func (e *Editor) moveCursor(keyType int) {
+    switch keyType {
+    case ARROW_UP:
+        if e.cursorX > 0 {
+            e.cursorX --
+        }
+    case ARROW_DOWN:
+        // if e.cursorX < len(e.buf.lines) - 1 {
+            e.cursorX ++
+        // }
+    case ARROW_RIGHT:
+        // if len(e.buf.lines) > 0 && e.cursorY < len(e.buf.lines[e.cursorX].txt) - 1 {
+            e.cursorY ++
+        // }
+    case ARROW_LEFT:
+        if e.cursorY > 0 {
+            e.cursorY -- 
+        }
+    }
 }
