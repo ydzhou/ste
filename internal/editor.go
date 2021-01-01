@@ -68,19 +68,24 @@ func (e *Editor) moveCursor(keyType int) {
     switch keyType {
     case ARROW_UP:
         if e.cursorX > 0 {
-            e.cursorX --
+            e.cursorX--
         }
     case ARROW_DOWN:
-        if e.cursorX < len(e.buf.lines) {
-            e.cursorX ++
+        if e.cursorX < len(e.buf.lines) - 1 {
+            e.cursorX++
         }
     case ARROW_RIGHT:
         if len(e.buf.lines) > 0 && e.cursorY < len(e.buf.lines[e.cursorX].txt) {
-            e.cursorY ++
+            e.cursorY++
         }
     case ARROW_LEFT:
         if e.cursorY > 0 {
-            e.cursorY -- 
+            e.cursorY--
         }
     }
+    // Reset cursor position if line does not have enough char
+    if e.cursorY > len(e.buf.lines[e.cursorX].txt) {
+        e.cursorY = len(e.buf.lines[e.cursorX].txt)
+    }
+
 }

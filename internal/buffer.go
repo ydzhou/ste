@@ -39,7 +39,7 @@ func (b *Buffer) NewLine(x, y int) {
 
 func (b *Buffer) Insert(x, y int, data rune) {
     // Append a new line if cursor is under the last line
-    if x == len(b.lines) && y == 0 {
+    if x == len(b.lines) - 1 {
         b.lines = append(b.lines, line{})
     }
 
