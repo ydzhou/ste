@@ -1,4 +1,4 @@
-package ste
+package term
 
 import (
     "os"
@@ -7,11 +7,11 @@ import (
     "errors"
 )
 
-type TermConfig struct {
+type Term struct {
     prevTerm *syscall.Termios
 }
 
-func (t *TermConfig) Raw() (error)  {
+func (t *Term) Raw() (error)  {
     term, err := t.getAttr(os.Stdin.Fd())
     if err != nil {
         return err
@@ -24,11 +24,11 @@ func (t *TermConfig) Raw() (error)  {
     return nil
 }
 
-func (t *TermConfig) Reset() {
+func (t *Term) Reset() {
     _ = t.setAtt(os.Stdin.Fd(), t.prevTerm)
 }
 
-func (t *TermConfig) setRaw(term *syscall.Termios) {
+func (t *Term) setRaw(term *syscall.Termios) {
     // This attempts to replicate the behaviour documented for cfmakeraw in
     // the termios(3) manpage.
     term.Iflag &^= syscall.IGNBRK | syscall.BRKINT | syscall.PARMRK | syscall.ISTRIP | syscall.INLCR | syscall.IGNCR | syscall.ICRNL | syscall.IXON
@@ -40,7 +40,7 @@ func (t *TermConfig) setRaw(term *syscall.Termios) {
     term.Cc[syscall.VMIN] = 1
     term.Cc[syscall.VTIME] = 0
 }
-func (t *TermConfig) getAttr(fd uintptr) (*syscall.Termios, error) {
+func (t *Term) getAttr(fd uintptr) (*syscall.Termios, error) {
     var term syscall.Termios
     _, _, err := syscall.Syscall6(
         syscall.SYS_IOCTL,
@@ -54,7 +54,7 @@ func (t *TermConfig) getAttr(fd uintptr) (*syscall.Termios, error) {
     return &term, nil
 }
 
-func (t *TermConfig) setAtt(fd uintptr, term *syscall.Termios) (error) {
+func (t *Term) setAtt(fd uintptr, term *syscall.Termios) (error) {
     _, _, err := syscall.Syscall6(
         syscall.SYS_IOCTL,
         fd,

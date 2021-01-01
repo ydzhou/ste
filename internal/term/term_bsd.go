@@ -1,6 +1,6 @@
 // +build darwin freebsd netbsd openbsd solaris dragonfly
 
-package ste
+package term
 
 import "syscall"
 

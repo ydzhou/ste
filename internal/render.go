@@ -23,9 +23,8 @@ func (r *Render) DrawScreen(
     colOffset int,
 ) {
     // bwriter := bufio.NewWriter(os.Stdout)
-    
     bufString := "\x1b[25l"
-    bufString += "\x1b[H"
+    r.Clear()
     bufString += r.drawHeader()
     bufString += r.drawBuffer(buf, rowOffset, colOffset)
     fmt.Print(bufString)
