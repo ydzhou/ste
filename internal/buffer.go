@@ -25,18 +25,14 @@ func (b *Buffer) NewLine(x, y int) {
     if y <= len(b.lines[x].txt) {
         line.txt = make([]rune, len(b.lines[x].txt[:y]))
         copy(line.txt, b.lines[x].txt[:y])
-        b.lines[x].txt = make([]rune, len(b.lines[x].txt[y:]))
-        copy(b.lines[x].txt, b.lines[x].txt[y:])
-        fmt.Println()
-        fmt.Println()
-        fmt.Println(b.lines[0])
+        nextLineTxt := make([]rune, len(b.lines[x].txt[y:]))
+        copy(nextLineTxt, b.lines[x].txt[y:])
+        b.lines[x].txt = nextLineTxt
     }
 
     b.lines = append(b.lines, line)
-
-    // copy(b.lines[x+1:], b.lines[x:])
-
-    // b.lines[x] = line
+    copy(b.lines[x+1:], b.lines[x:])
+    b.lines[x] = line
 
     return
 }
