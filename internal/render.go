@@ -1,68 +1,69 @@
 package ste
 
 import (
-    "io"
-    "os"
-    "fmt"
-    // "bufio"
+	"bytes"
+	"fmt"
+	"io"
+	"os"
 )
 
 type Render struct {
+	viewX, viewY int
 }
 
 func (r *Render) Clear() {
-    io.WriteString(os.Stdout, "\x1b[2J")
-    io.WriteString(os.Stdout, "\x1b[H")
+	_, err := io.WriteString(os.Stdout, "\x1b[2J")
+	_, err = io.WriteString(os.Stdout, "\x1b[H")
+	if err != nil {
+	    panic(err)
+    }
 }
 
 func (r *Render) DrawScreen(
-    buf Buffer,
-    cursorX int,
-    cursorY int,
-    rowOffset int,
-    colOffset int,
+	buf Buffer,
+	cursorX int,
+	cursorY int,
+	rowOffset int,
+	colOffset int,
 ) {
-    // bwriter := bufio.NewWriter(os.Stdout)
-    bufString := "\x1b[25l"
-    r.Clear()
-    bufString += r.drawHeader()
-    bufString += r.drawBuffer(buf, rowOffset, colOffset)
-    fmt.Print(bufString)
-    bufString = ""
-    bufString += r.drawCursor(cursorX, cursorY, rowOffset, colOffset)
-    bufString += "\x1b[25l"
-    
-    fmt.Print(bufString)
-}
+	b := bytes.Buffer{}
+	b.WriteString("\x1b[?25l")
+	b.WriteString("\x1b[H")
+	b.WriteString(r.drawBuffer(buf, rowOffset, colOffset))
+	b.WriteString(r.drawCursor(cursorX, cursorY, rowOffset, colOffset))
+	b.WriteString("\x1b[?25h")
 
-func (r *Render) drawHeader() string {
-    return "STE\n\n"
+	_, err := b.WriteTo(os.Stdout)
+	if err != nil {
+	    panic(err)
+    }
 }
 
 func (r *Render) drawBuffer(
-    buf Buffer,
-    rowOffset int,
-    colOffset int,
+	buf Buffer,
+	rowOffset int,
+	colOffset int,
 ) string {
-    res := ""
-    for i, row := range buf.lines{
-        if i < rowOffset {
-            continue
-        }
-        res += string(row.txt[colOffset:])
-        res += "\n"
-    }
-    return res
+	res := ""
+	for i, row := range buf.lines {
+		if i < rowOffset {
+			continue
+		}
+		res += string(row.txt[colOffset:])
+		res += "\x1b[K"
+		res += "\r\n"
+	}
+	return res
 }
 
 func (r *Render) drawCursor(
-    cursorX int,
-    cursorY int,
-    rowOffset int,
-    colOffset int,
+	cursorX int,
+	cursorY int,
+	rowOffset int,
+	colOffset int,
 ) string {
-    return fmt.Sprintf(
-        "\x1b[%d;%dH", 
-        cursorX - rowOffset + 3, 
-        cursorY - colOffset + 1)
+	return fmt.Sprintf(
+		"\x1b[%d;%dH",
+		cursorX-rowOffset+1,
+		cursorY-colOffset+1)
 }

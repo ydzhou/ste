@@ -89,3 +89,13 @@ func (e *Editor) moveCursor(keyType int) {
     }
 
 }
+
+func (e *Editor) Open(fileName string) {
+    rd, err := os.Open(fileName)
+    if err != nil {
+        panic(err)
+    }
+    defer rd.Close()
+
+    
+}
