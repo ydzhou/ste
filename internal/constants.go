@@ -9,4 +9,5 @@ const (
     ARROW_LEFT = iota
 
     ENTER = iota
+    BACKSPACE = iota
 )

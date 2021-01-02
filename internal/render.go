@@ -29,7 +29,7 @@ func (r *Render) DrawScreen(
 	b := bytes.Buffer{}
 	b.WriteString("\x1b[?25l")
 	b.WriteString("\x1b[H")
-	b.WriteString(r.drawBuffer(buf, rowOffset, colOffset))
+	b.WriteString(r.drawBuffer(buf))
 	b.WriteString(r.drawCursor(cursorX, cursorY, rowOffset, colOffset))
 	b.WriteString("\x1b[?25h")
 
@@ -41,17 +41,15 @@ func (r *Render) DrawScreen(
 
 func (r *Render) drawBuffer(
 	buf Buffer,
-	rowOffset int,
-	colOffset int,
 ) string {
 	res := ""
-	for i, row := range buf.lines {
-		if i < rowOffset {
+	for _, r := range buf.txt {
+		if r == '\n' {
+			res += "\x1b[K"
+			res += "\r\n"
 			continue
 		}
-		res += string(row.txt[colOffset:])
-		res += "\x1b[K"
-		res += "\r\n"
+		res += string(r)
 	}
 	return res
 }

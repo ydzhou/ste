@@ -43,59 +43,62 @@ func (e *Editor) Start() {
 }
 
 func (e *Editor) process() bool {
-    keyAscii, key, special := e.readKeyPress()
-    if special {
-    switch keyAscii {
-    case CTRL_Q:
-        return true
-    case ARROW_UP, ARROW_DOWN, ARROW_RIGHT, ARROW_LEFT:
-        e.moveCursor(keyAscii)
-        break
-    case ENTER:
-        e.buf.NewLine(e.cursorX, e.cursorY)
-        e.cursorX ++
-        e.cursorY = 0
-        break
-    }
+    code, key := e.readKeyPress()
+    if code > -1 {
+        switch code {
+        case CTRL_Q:
+            return true
+        case ARROW_UP, ARROW_DOWN, ARROW_RIGHT, ARROW_LEFT:
+            e.moveCursor(code)
+            break
+        case ENTER:
+            e.buf.NewLine(e.cursorX, e.cursorY)
+            e.cursorX ++
+            e.cursorY = 0
+            break
+        case BACKSPACE:
+            e.buf.Backspace(e.cursorX, e.cursorY)
+            e.cursorY --
+            if e.cursorY == 0 && e.cursorX > 0 {
+                e.cursorX --
+            }
+            break
+        }
     } else {
-        e.buf.Insert(e.cursorX, e.cursorY, key)
+        e.buf.InsertRune(e.cursorX, e.cursorY, key)
         e.cursorY ++
     }
+
+    e.fixCursorOutbound()
+
     return false
 }
 
 func (e *Editor) moveCursor(keyType int) {
     switch keyType {
     case ARROW_UP:
-        if e.cursorX > 0 {
-            e.cursorX--
-        }
+        e.cursorX--
     case ARROW_DOWN:
-        if e.cursorX < len(e.buf.lines) - 1 {
-            e.cursorX++
-        }
+        e.cursorX++
     case ARROW_RIGHT:
-        if len(e.buf.lines) > 0 && e.cursorY < len(e.buf.lines[e.cursorX].txt) {
-            e.cursorY++
-        }
+        e.cursorY++
     case ARROW_LEFT:
-        if e.cursorY > 0 {
-            e.cursorY--
-        }
+        e.cursorY--
     }
-    // Reset cursor position if line does not have enough char
-    if e.cursorY > len(e.buf.lines[e.cursorX].txt) {
-        e.cursorY = len(e.buf.lines[e.cursorX].txt)
-    }
-
 }
 
-func (e *Editor) Open(fileName string) {
-    rd, err := os.Open(fileName)
-    if err != nil {
-        panic(err)
+func (e *Editor) fixCursorOutbound() {
+    if e.cursorX < 0 {
+        e.cursorX = 0
     }
-    defer rd.Close()
-
-    
+    if e.cursorX > e.buf.lineNum - 1 {
+        e.cursorX = e.buf.lineNum - 1
+    }
+    if e.cursorY < 0 {
+        e.cursorY = 0
+    }
+    colNum := e.buf.GetCurrColNum(e.cursorX)
+    if e.cursorY > colNum {
+        e.cursorY = colNum
+    }
 }

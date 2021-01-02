@@ -1,57 +1,91 @@
 package ste
 
-import ("fmt")
-
 type Buffer struct {
-    lines []line
+    txt [] rune
     dirty bool
     id int
-}
-
-type line struct {
-    txt [] rune
+    lineNum int
 }
 
 func (b *Buffer) New() {
-    b.lines = []line{line{}}
+    b.txt = []rune{'\n'}
+    b.lineNum = 1
 }
 
 func (b *Buffer) NewLine(x, y int) {
-    if x > len(b.lines) - 1 || y > len(b.lines[x].txt) {
-        panic(fmt.Errorf("failed to create new line at (%d,%d)", x, y))
-    }
-
-    line := line{}
-    if y <= len(b.lines[x].txt) {
-        line.txt = make([]rune, len(b.lines[x].txt[:y]))
-        copy(line.txt, b.lines[x].txt[:y])
-        nextLineTxt := make([]rune, len(b.lines[x].txt[y:]))
-        copy(nextLineTxt, b.lines[x].txt[y:])
-        b.lines[x].txt = nextLineTxt
-    }
-
-    b.lines = append(b.lines, line)
-    copy(b.lines[x+1:], b.lines[x:])
-    b.lines[x] = line
-
-    return
+    b.InsertRune(x, y, '\n')
+    b.lineNum ++
 }
 
-func (b *Buffer) Insert(x, y int, data rune) {
-    // Append a new line if cursor is under the last line
-    if x == len(b.lines) - 1 {
-        b.lines = append(b.lines, line{})
-    }
+func (b *Buffer) InsertRune(x, y int, data rune) {
+    b.Insert(x, y, []rune{data})
+}
 
-    if x > len(b.lines) - 1 || y > len(b.lines[x].txt) {
-        panic(fmt.Errorf("failed to insert [%s] at (%d,%d)", string(data), x, y))
-    }
-
-    b.lines[x].txt = append(b.lines[x].txt, data)
-    if y == len(b.lines[x].txt) - 1 {
+func (b *Buffer) Insert(x, y int, data []rune) {
+    idx := b.getIdx(x, y)
+    if idx == len(b.txt) {
+        b.txt = append(b.txt, data...)
+        b.txt = append(b.txt, '\n')
+        b.lineNum ++
         return
-    } 
-
-    copy(b.lines[x].txt[y+1:], b.lines[x].txt[y:])
-    b.lines[x].txt[y] = data
+    }
+    txt := make([] rune, idx)
+    copy(txt, b.txt[:idx])
+    txt = append(txt, data...)
+    txt = append(txt, b.txt[idx:]...)
+    b.txt = txt
+    b.dirty = true
 }
+
+func (b *Buffer) Backspace(x, y int) {
+    idx := b.getIdx(x, y)
+    if idx == 0 {
+        return
+    }
+    if b.txt[idx - 1] == '\n' {
+        b.lineNum --
+    }
+    txt := make([] rune, idx - 1)
+    copy(txt, b.txt[:idx - 1])
+    txt = append(txt, b.txt[idx:]...)
+    b.txt = txt
+    b.dirty = true
+}
+
+func (b *Buffer) getIdx(x, y int) int {
+    idx := 0
+    for idx, _ = range b.txt {
+        if x == 0 && y == 0 {
+            break
+        }
+        if x > 0 && b.txt[idx] == rune('\n') {
+            x--
+            continue
+        }
+        if x == 0 {
+            y --
+        }
+        if b.txt[idx] == rune('\n') {
+            break
+        }
+    }
+    return idx
+}
+
+func (b *Buffer) GetCurrColNum(x int) int {
+    idx := 0
+    for i, _ := range b.txt {
+        if x == 0 {
+            if b.txt[i] == '\n' {
+                return idx
+            }
+            idx ++
+        }
+        if b.txt[i] == '\n' {
+            x --
+        }
+    }
+    return idx
+}
+
+
