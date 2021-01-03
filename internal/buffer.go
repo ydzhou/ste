@@ -87,5 +87,3 @@ func (b *Buffer) GetCurrColNum(x int) int {
     }
     return idx
 }
-
-

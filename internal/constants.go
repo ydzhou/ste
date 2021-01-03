@@ -10,4 +10,7 @@ const (
 
     ENTER = iota
     BACKSPACE = iota
+
+    // Soft tab size
+    TAB_SIZE = 4
 )

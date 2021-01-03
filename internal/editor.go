@@ -1,6 +1,7 @@
 package ste
 
 import (
+    "math"
     "os"
     "bufio"
     "github.com/ydzhou/ste/internal/term"
@@ -9,37 +10,44 @@ import (
 type Editor struct {
     term term.Term
     buf Buffer
-    reader *bufio.Reader
-    render Render
+    reader           *bufio.Reader
+    display          Display
     cursorX, cursorY int
-    rowOffset, colOffset int
 }
 
 func (e *Editor) Init() {
     e.term = term.Term{}
     e.buf = Buffer{}
     e.reader = bufio.NewReader(os.Stdin)
-    e.render = Render{}
     e.cursorX = 0
     e.cursorY = 0
     e.buf.New()
+    displayX, displayY := e.term.GetSize()
+    e.display = Display{
+        viewX: displayX,
+        viewY: displayY,
+        offsetX: 0,
+        offsetY: 0,
+    }
+    e.Open("/Users/yudi/demo.s")
 }
 
 func (e *Editor) Start() {
-    _ = e.term.Raw()
-
-    e.render.Clear()
+    err := e.term.Raw()
+    if err != nil {
+        panic(err)
+    }
 
     defer e.term.Reset()
 
     for {
-        e.render.DrawScreen(e.buf, e.cursorX, e.cursorY, e.rowOffset, e.colOffset)
+        e.display.DrawScreen(e.buf, e.cursorX, e.cursorY)
         if e.process() {
             break
         }
     }
 
-    e.render.Clear()
+    e.display.Clear()
 }
 
 func (e *Editor) process() bool {
@@ -59,9 +67,6 @@ func (e *Editor) process() bool {
         case BACKSPACE:
             e.buf.Backspace(e.cursorX, e.cursorY)
             e.cursorY --
-            if e.cursorY == 0 && e.cursorX > 0 {
-                e.cursorX --
-            }
             break
         }
     } else {
@@ -95,7 +100,12 @@ func (e *Editor) fixCursorOutbound() {
         e.cursorX = e.buf.lineNum - 1
     }
     if e.cursorY < 0 {
-        e.cursorY = 0
+        if e.cursorX == 0 {
+            e.cursorY = 0
+            return
+        }
+        e.cursorX--
+        e.cursorY = math.MaxInt32
     }
     colNum := e.buf.GetCurrColNum(e.cursorX)
     if e.cursorY > colNum {

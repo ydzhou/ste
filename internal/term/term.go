@@ -21,6 +21,13 @@ type termios struct {
     Ospeed uint64
 }
 
+type termsize struct {
+    row    uint16
+    col    uint16
+    xpixel uint16
+    ypixel uint16
+}
+
 func (t *Term) Raw() (error)  {
     term, err := t.getAttr(os.Stdin.Fd())
     if err != nil {
@@ -62,4 +69,17 @@ func (t *Term) setAtt(fd uintptr, term *termios) (error) {
         return errors.New("faled to set term attributes")
     }
     return nil
+}
+
+func (t *Term) GetSize() (x, y int) {
+    var s termsize
+    _, _, err := syscall.Syscall(syscall.SYS_IOCTL,
+        os.Stdout.Fd(),
+        syscall.TIOCGWINSZ,
+        uintptr(unsafe.Pointer(&s)),
+    )
+    if err != 0 {
+        panic(err)
+    }
+    return int(s.row), int(s.col)
 }
