@@ -1,11 +1,11 @@
 package main
 
 import (
-    "github.com/ydzhou/ste/internal"
+	"github.com/ydzhou/ste/internal"
 )
 
 func main() {
-    editor := ste.Editor{}
-    editor.Init()
-    editor.Start()
+	editor := ste.Editor{}
+	editor.Init()
+	editor.Start()
 }

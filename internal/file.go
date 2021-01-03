@@ -19,7 +19,7 @@ func (e *Editor) Open(name string) {
 	for sc.Scan() {
 		e.buf.txt = append(e.buf.txt, []rune(sc.Text())...)
 		e.buf.txt = append(e.buf.txt, '\n')
-		e.buf.lineNum ++
+		e.buf.lineNum++
 	}
 
 	if err := sc.Err(); err != nil {

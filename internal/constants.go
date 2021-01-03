@@ -1,16 +1,16 @@
 package ste
 
 const (
-    CTRL_Q = iota
-    
-    ARROW_UP = iota
-    ARROW_DOWN = iota
-    ARROW_RIGHT = iota
-    ARROW_LEFT = iota
+	CTRL_Q = iota
 
-    ENTER = iota
-    BACKSPACE = iota
+	ARROW_UP    = iota
+	ARROW_DOWN  = iota
+	ARROW_RIGHT = iota
+	ARROW_LEFT  = iota
 
-    // Soft tab size
-    TAB_SIZE = 4
+	ENTER     = iota
+	BACKSPACE = iota
+
+	// Soft tab size
+	TAB_SIZE = 4
 )
