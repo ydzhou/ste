@@ -89,8 +89,8 @@ func (d *Display) drawBuffer(
 		if i != 0 {
 			b.WriteString("\r\n")
 		}
-		for _, r := range l {
-			b.WriteRune(r)
+		for j := d.offsetY ; j < len(l) && j < d.offsetY + d.viewY; j++ {
+			b.WriteRune(l[j])
 		}
 		b.WriteString("\x1b[K")
 	}
@@ -116,13 +116,13 @@ func (d *Display) drawCursor(
 }
 
 func (d *Display) scroll(cursorX int, cursorY int) {
-	if cursorX > d.offsetX+d.viewX {
-		d.offsetX = cursorX - d.viewX
+	if cursorX >= d.offsetX+d.viewX {
+		d.offsetX = cursorX - d.viewX + 1
 	} else if cursorX < d.offsetX {
 		d.offsetX = cursorX
 	}
-	if cursorY > d.offsetY+d.viewY {
-		d.offsetY = cursorY - d.viewY
+	if cursorY >= d.offsetY+d.viewY {
+		d.offsetY = cursorY - d.viewY + 1
 	} else if cursorY < d.offsetY {
 		d.offsetY = cursorY
 	}

@@ -48,11 +48,8 @@ func (t *Term) Reset() {
 func (t *Term) setRaw(term *termios) {
 	term.Iflag &^= syscall.IGNBRK | syscall.BRKINT | syscall.PARMRK | syscall.ISTRIP | syscall.INLCR | syscall.IGNCR | syscall.ICRNL | syscall.IXON
 	term.Oflag &^= syscall.OPOST
-	term.Lflag &^= syscall.ECHO | syscall.ECHONL | syscall.ICANON | syscall.ISIG | syscall.IEXTEN
-	term.Cflag &^= syscall.CSIZE | syscall.PARENB
+	term.Lflag &^= syscall.ECHO | syscall.ICANON | syscall.ISIG | syscall.IEXTEN
 	term.Cflag |= syscall.CS8
-	term.Cc[syscall.VMIN] = 1
-	term.Cc[syscall.VTIME] = 0
 }
 func (t *Term) getAttr(fd uintptr) (*termios, error) {
 	var term termios

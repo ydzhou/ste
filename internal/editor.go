@@ -29,7 +29,7 @@ func (e *Editor) Init() {
 		offsetX: 0,
 		offsetY: 0,
 	}
-	e.Open("/Users/yudi/demo.s")
+	//e.Open("/Users/yudi/demo.s")
 }
 
 func (e *Editor) Start() {
